@@ -1,0 +1,36 @@
+{# #}
+{% for vlan, item in LAN.items() %}
+{% set iface = "{} vif {}".format(item.iface, vlan) if vlan > 0 else item.iface %}
+{% set name = "GUEST" if item.guest|default(false) else "LAN" %}
+set interfaces ethernet {{ iface }} address {{ item.ip }}/{{ item.mask }}
+set interfaces ethernet {{ iface }} firewall in name {{ name }}_IN
+set interfaces ethernet {{ iface }} firewall local name {{ name }}_LOCAL
+set interfaces ethernet {{ iface }} firewall out name {{ name }}_OUT
+{% endfor %}
+
+{# #}
+{% for id, item in PPPOE.items() %}
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} description '{{ item.description }}'
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} default-route none
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} name-server none
+
+{% if item.username or item.password %}
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} user-id '{{ item.username }}'
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} password '{{ item.password }}'
+{% endif %}
+
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall in name WAN_IN
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall local name WAN_LOCAL
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall out name WAN_OUT
+
+set interfaces ethernet {{ item.iface }} firewall in name WAN_IN
+set interfaces ethernet {{ item.iface }} firewall local name WAN_LOCAL
+set interfaces ethernet {{ item.iface }} firewall out name WAN_OUT
+
+set service nat rule {{ 5000 + id}} outbound-interface pppoe{{ id }}
+set service nat rule {{ 5000 + id}} protocol all
+set service nat rule {{ 5000 + id}} type masquerade
+set service nat rule {{ 5000 + id}} log disable
+
+set protocols static interface-route 0.0.0.0/0 next-hop-interface pppoe{{ id }} distance {{ item.distance | default(1) }}
+{% endfor %}

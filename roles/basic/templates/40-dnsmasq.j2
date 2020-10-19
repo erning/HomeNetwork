@@ -1,0 +1,20 @@
+{# #}
+set service dns forwarding cache-size 10000
+
+{# #}
+{% for id, item in PPPOE.items() %}
+set service dns forwarding except-interface pppoe{{ id }}
+set service dns forwarding except-interface {{ item.iface }}
+{% endfor %}
+
+{# #}
+# set service dns forwarding options conf-dir='/config/dnsmasq.d'
+
+{# #}
+{% for id, item in PPPOE.items() %}
+{% for subitem in item.dns %}
+set service dns forwarding options server={{ subitem }}
+{% endfor %}
+{% endfor %}
+set service dns forwarding options no-resolv
+set service dns forwarding options all-servers

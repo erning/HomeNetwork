@@ -1,0 +1,57 @@
+ansible_host: 192.168.1.1
+ansible_user: ubnt
+# ansible_password: ubnt
+# ansible_python_interpreter: ve python
+
+LAN:
+  0:
+    iface: eth0
+    ip: 192.168.1.1
+    net: 192.168.1.0
+    mask: 24
+    dhcpd:
+      start: 192.168.1.101
+      stop: 192.168.1.102
+
+  1003:
+    iface: eth0
+    ip: 192.168.0.1
+    net: 192.168.0.1
+    mask: 24
+    dhcpd:
+      start: 192.168.0.101
+      stop: 192.168.0.102
+    guest: yes
+
+PPPOE:
+  1:
+    iface: eth1
+    description: China Mobile
+    username: user1
+    password: pass1
+    distance: 10
+    dns:
+      - 211.136.112.50
+      - 211.136.150.66
+  2:
+    iface: eth2
+    description: China Telecom
+    username: user2
+    password: pass2
+    dns:
+      - 202.96.209.133
+      - 202.96.209.5
+
+STATIC_MAPPING:
+  - name: IPTV-BOX-CT
+    mac: a0:00:00:00:00:01
+    ip: 192.168.0.41
+    vlan: 1003
+    stick_pppoe: 2
+    features:
+      ShanghaiTelecomIPTV: yes
+  - name: IPTV-BOX-CM
+    mac: a0:00:00:00:00:02
+    ip: 192.168.0.42
+    vlan: 1003
+    stick_pppoe: 1

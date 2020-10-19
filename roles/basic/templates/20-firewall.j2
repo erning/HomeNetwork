@@ -1,0 +1,95 @@
+{# #}
+set firewall group network-group corporate_network description 'corporate subnets'
+set firewall group network-group guest_network description 'guest subnets'
+set firewall group network-group remote_client_vpn_network description 'remote client VPN subnets'
+set firewall group network-group remote_site_vpn_network description 'remote site VPN subnets'
+set firewall group network-group remote_user_vpn_network description 'remote user VPN subnets'
+
+# set firewall group ipv6-network-group corporate_networkv6 description 'IPv6 corporate subnets'
+# set firewall group ipv6-network-group guest_networkv6 description 'IPv6 guest subnets'
+
+{# #}
+set firewall group address-group guest_allow description 'allow addresses for guests'
+
+set firewall group address-group guest_restricted description 'restricted addresses for guests'
+set firewall group address-group guest_restricted address 192.168.0.0/16
+set firewall group address-group guest_restricted address 172.16.0.0/12
+set firewall group address-group guest_restricted address 10.0.0.0/8
+
+{# #}
+{%
+  set items = [
+    ('LAN_IN',      'accept', 'packets from intranet'),
+    ('LAN_LOCAL',   'accept', 'packets from intranet to gateway'),
+    ('LAN_OUT',     'accept', 'packets forward to intranet'),
+    ('WAN_IN',      'drop',   'packets from internet to intranet'),
+    ('WAN_LOCAL',   'drop',   'packets from internet to gateway'),
+    ('WAN_OUT',     'accept', 'packets to internet'),
+    ('GUEST_IN',    'accept', 'packets from guest network'),
+    ('GUEST_LOCAL', 'drop',   'packets from guest network to gateway'),
+    ('GUEST_OUT',   'accept', 'packets forward to guest network'),
+  ]
+%}
+{% for name, action, desc in items %}
+set firewall name {{ name }} description '{{ desc }}'
+set firewall name {{ name }} default-action {{ action }}
+{% endfor %}
+
+{# #}
+{% macro allow_valid_session(name, idx=3001) %}
+set firewall name {{ name }} rule {{ idx }} description 'allow established/related sessions'
+set firewall name {{ name }} rule {{ idx }} action accept
+set firewall name {{ name }} rule {{ idx }} state established enable
+set firewall name {{ name }} rule {{ idx }} state invalid disable
+set firewall name {{ name }} rule {{ idx }} state new disable
+set firewall name {{ name }} rule {{ idx }} state related enable
+set firewall name {{ name }} rule {{ idx+1 }} description 'drop invalid state'
+set firewall name {{ name }} rule {{ idx+1 }} action drop
+set firewall name {{ name }} rule {{ idx+1 }} state established disable
+set firewall name {{ name }} rule {{ idx+1 }} state invalid enable
+set firewall name {{ name }} rule {{ idx+1 }} state new disable
+set firewall name {{ name }} rule {{ idx+1 }} state related disable
+{% endmacro %}}
+
+{# #}
+{{ allow_valid_session('WLAN_IN') }}
+{{ allow_valid_session('WLAN_LOCAL') }}
+{{ allow_valid_session('GUEST_IN') }}
+{{ allow_valid_session('GUEST_LOCAL') }}
+
+{# #}
+{% set name='GUEST_IN' %}}
+{% set idx=3011 %}}
+set firewall name {{ name }} rule {{ idx }} action drop
+set firewall name {{ name }} rule {{ idx }} description 'drop packets to restricted subnets'
+set firewall name {{ name }} rule {{ idx }} destination group address-group guest_restricted
+
+{% set idx=idx+1 %}}
+set firewall name {{ name }} rule {{ idx }} action drop
+set firewall name {{ name }} rule {{ idx }} description 'drop packets to intranet'
+set firewall name {{ name }} rule {{ idx }} destination group network-group corporate_network
+
+{% set idx=idx+1 %}}
+set firewall name {{ name }} rule {{ idx }} action drop
+set firewall name {{ name }} rule {{ idx }} description 'drop packets to remote user'
+set firewall name {{ name }} rule {{ idx }} destination group network-group remote_user_vpn_network
+
+{# #}
+{% set name='GUEST_LOCAL' %}}
+{% set idx=3011 %}}
+set firewall name {{ name }} rule {{ idx }} action accept
+set firewall name {{ name }} rule {{ idx }} description 'allow ICMP'
+set firewall name {{ name }} rule {{ idx }} protocol icmp
+
+{% set idx=idx+1 %}}
+set firewall name {{ name }} rule {{ idx }} action accept
+set firewall name {{ name }} rule {{ idx }} description 'allow DNS'
+set firewall name {{ name }} rule {{ idx }} destination port 53
+set firewall name {{ name }} rule {{ idx }} protocol tcp_udp
+
+{% set idx=idx+1 %}}
+set firewall name {{ name }} rule {{ idx }} action accept
+set firewall name {{ name }} rule {{ idx }} description 'allow to DHCP server'
+set firewall name {{ name }} rule {{ idx }} destination port 67
+set firewall name {{ name }} rule {{ idx }} protocol udp
+set firewall name {{ name }} rule {{ idx }} source port 68

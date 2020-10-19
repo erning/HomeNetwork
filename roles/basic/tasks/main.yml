@@ -1,0 +1,20 @@
+
+- name: set system
+  community.network.edgeos_config:
+    src: 10-system.j2
+
+- name: setup firewall
+  community.network.edgeos_config:
+    src: 20-firewall.j2
+
+- name: setup interfaces
+  community.network.edgeos_config:
+    src: 30-interfaces.j2
+
+- name: setup dnsmasq
+  community.network.edgeos_config:
+    src: 40-dnsmasq.j2
+
+- name: setup dhcpd
+  community.network.edgeos_config:
+    src: 40-dhcpd.j2

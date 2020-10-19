@@ -1,0 +1,33 @@
+{# #}
+set service dhcp-server hostfile-update disable
+
+{% set prefix = "service dhcp-server shared-network-name" %}
+
+{% for vlan, item in LAN.items() %}
+{% set name = "LAN_{}".format(vlan) if vlan > 0 else "LAN" %}
+{% set subnet = "{}/{}".format(item.net, item.mask) %}
+set {{ prefix }} {{ name }} authoritative disable
+set {{ prefix }} {{ name }} subnet {{ subnet }} default-router {{ item.router | default(item.ip) }}
+set {{ prefix }} {{ name }} subnet {{ subnet }} dns-server {{ item.dns | default(item.ip) }}
+set {{ prefix }} {{ name }} subnet {{ subnet }} lease {{ item.lease | default(86400) }}
+set {{ prefix }} {{ name }} subnet {{ subnet }} start {{ item.dhcpd.start }} stop {{ item.dhcpd.stop }}
+{% endfor %}
+
+{# #}
+{% for item in STATIC_MAPPING %}
+{% set name = "LAN_{}".format(item.vlan) if item.vlan > 0 else "LAN" %}
+{% set subnet = "{}/{}".format(LAN[item.vlan].net, LAN[item.vlan].mask) %}
+set {{ prefix }} {{ name }} subnet {{ subnet }} static-mapping {{ item.name }} mac-address {{ item.mac}}
+set {{ prefix }} {{ name }} subnet {{ subnet }} static-mapping {{ item.name }} ip-address {{ item.ip}}
+
+{% if item.features.ShanghaiTelecomIPTV|default(false) %}
+set service dhcp-server global-parameters 'option option-125 code 125 = string;'
+set {{ prefix }} {{ name }} subnet {{ subnet }} static-mapping {{ item.name }} static-mapping-parameters 'option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list, 7d);'
+set {{ prefix }} {{ name }} subnet {{ subnet }} static-mapping {{ item.name }} static-mapping-parameters 'option option-125 00:00:00:00:1a:02:06:48:47:57:2d:43:54:03:04:5a:58:48:4e:0a:02:20:00:0b:02:00:55:0d:02:00:2e;'
+{% endif %}
+
+{% if item.stick_pppoe is defined %}
+set {{ prefix }} {{ name }} subnet {{ subnet }} static-mapping {{ item.name }} static-mapping-parameters 'option domain-name-servers {{ PPPOE[item.stick_pppoe].dns | join(", ") }};'
+{% endif %}
+
+{% endfor %}
