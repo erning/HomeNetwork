@@ -47,6 +47,52 @@ NODES:
           - 202.96.209.133
           - 202.96.209.5
 
+    LOAD_BALANCE:
+      "WLB-DEFAULT":
+        interfaces:
+          pppoe1:
+          pppoe2:
+      "WLB-CM":
+        interfaces:
+          pppoe1:
+          pppoe2:
+            failover: yes
+      "WLB-CT":
+        interfaces:
+          pppoe1:
+            failover: yes
+          pppoe2:
+      "WLB-WFG":
+        interfaces:
+          vtun0:
+          pppoe1:
+            failover: yes
+          pppoe2:
+            failover: yes
+
+    POLICY_ROUTE:
+      "100":
+        - via: WLB-CM
+          src: client-prefer-cm
+        - via: WLB-CT
+          src: client-prefer-ct
+        - via: WLB-DEFAULT
+          src: client-prefer-cn
+      "200":
+        - via: WLB-CM
+          dst: cm-network
+        - via: WLB-CT
+          dst: ct-network
+        - via: WLB-DEFAULT
+          dst: cn-network
+      "500":
+        - via: WLB-CM
+          src: client-default-cm
+        - via: WLB-CT
+          src: client-default-ct
+      "600":
+        - via: WLB-DEFAULT
+
     STATIC_MAPPING:
       - name: IPTV-BOX-CT
         mac: a0:00:00:00:00:01
