@@ -33,6 +33,7 @@ set firewall group address-group guest_restricted address 10.0.0.0/8
 {% for name, action, desc in items %}
 set firewall name {{ name }} description '{{ desc }}'
 set firewall name {{ name }} default-action {{ action }}
+{# delete firewall name {{ name }} rule #}
 {% endfor %}
 
 {# #}
@@ -52,8 +53,8 @@ set firewall name {{ name }} rule {{ idx+1 }} state related disable
 {% endmacro %}}
 
 {# #}
-{{ allow_valid_session('WLAN_IN') }}
-{{ allow_valid_session('WLAN_LOCAL') }}
+{{ allow_valid_session('WAN_IN') }}
+{{ allow_valid_session('WAN_LOCAL') }}
 {{ allow_valid_session('GUEST_IN') }}
 {{ allow_valid_session('GUEST_LOCAL') }}
 

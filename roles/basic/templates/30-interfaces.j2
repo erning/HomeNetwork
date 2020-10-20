@@ -2,6 +2,7 @@
 {% for name, item in LAN.items() %}
 {% set iface = "{} vif {}".format(item.iface, item.vlan) if item.vlan is defined and item.vlan > 0 else item.iface %}
 {% set fwname = "GUEST" if item.guest|default(false) else "LAN" %}
+{# delete interfaces ethernet {{ iface }} address #}
 set interfaces ethernet {{ iface }} address {{ item.address }}
 set interfaces ethernet {{ iface }} firewall in name {{ fwname }}_IN
 set interfaces ethernet {{ iface }} firewall local name {{ fwname }}_LOCAL
@@ -11,6 +12,11 @@ set interfaces ethernet {{ iface }} firewall out name {{ fwname }}_OUT
 {# #}
 {% for id, item in WAN.items() %}
 set interfaces ethernet {{ item.iface }} description '{{ item.description | default("") }}'
+{% if item.address is defined %}
+set interfaces ethernet {{ item.iface }} address {{ item.address }}
+{% else %}
+delete interfaces ethernet {{ item.iface }} address
+{% endif %}
 set interfaces ethernet {{ item.iface }} firewall in name WAN_IN
 set interfaces ethernet {{ item.iface }} firewall local name WAN_LOCAL
 set interfaces ethernet {{ item.iface }} firewall out name WAN_OUT
@@ -23,7 +29,10 @@ set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall in name WAN_IN
 set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall local name WAN_LOCAL
 set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall out name WAN_OUT
 
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} mtu '{{ item.pppoe.mtu | default(1492)}}'
+{# TODO: #}
+{% if item.pppoe.mtu is defined %}
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} mtu '{{ item.pppoe.mtu }}'
+{% endif %}
 {% if item.pppoe.username is defined %}
 set interfaces ethernet {{ item.iface }} pppoe {{ id }} user-id '{{ item.pppoe.username }}'
 {% endif %}
