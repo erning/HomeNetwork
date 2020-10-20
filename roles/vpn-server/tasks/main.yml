@@ -33,3 +33,17 @@
   community.network.edgeos_config:
     src: l2tp.j2
   when: NODES[inventory_hostname].VPN_SERVER.L2TP is defined
+
+- name: site-to-site
+  block:
+    - name: copy shared key
+      vars:
+        ansible_connection: ssh
+      copy:
+        src: "{{ inventory_hostname }}/shared.key.pem"
+        dest: /config/openvpn/s2s/
+        mode: '0644'
+    - name: setup s2s
+      community.network.edgeos_config:
+        src: s2s.j2
+  when: NODES[inventory_hostname].VPN_S2S is defined

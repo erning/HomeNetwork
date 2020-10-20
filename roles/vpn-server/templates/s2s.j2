@@ -1,0 +1,46 @@
+{# #}
+{% set NODE = NODES[inventory_hostname] %}
+{% for item in NODE.VPN_S2S.peers %}
+{% set peer = NODES[item]%}
+{% set a = NODE.VPN_S2S.code %}
+{% set b = peer.VPN_S2S.code %}
+{% set code = "{}{}".format(a, b) if a < b else "{}{}".format(b, a) %}
+set interfaces openvpn vtun{{ code }} description 'VPN - Site {{ code }}'
+set interfaces openvpn vtun{{ code }} mode site-to-site
+set interfaces openvpn vtun{{ code }} protocol udp
+
+set interfaces openvpn vtun{{ code }} encryption aes256
+set interfaces openvpn vtun{{ code }} hash sha256
+
+{# set interfaces openvpn vtun{{ code }} firewall in modify POLICY_ROUTE #}
+set interfaces openvpn vtun{{ code }} firewall in name LAN_IN
+set interfaces openvpn vtun{{ code }} firewall local name LAN_LOCAL
+set interfaces openvpn vtun{{ code }} firewall out name LAN_OUT
+
+set interfaces openvpn vtun{{ code }} local-address 192.168.254.{{ a }}
+set interfaces openvpn vtun{{ code }} local-port 1{{ code }}
+set interfaces openvpn vtun{{ code }} remote-address 192.168.254.{{ b }}
+set interfaces openvpn vtun{{ code }} remote-host {{ peer.FQDN }}
+set interfaces openvpn vtun{{ code }} remote-port 1{{ code }}
+
+set interfaces openvpn vtun{{ code }} openvpn-option '--user nobody'
+set interfaces openvpn vtun{{ code }} openvpn-option '--group nogroup'
+set interfaces openvpn vtun{{ code }} openvpn-option --persist-tun
+set interfaces openvpn vtun{{ code }} openvpn-option --persist-key
+set interfaces openvpn vtun{{ code }} openvpn-option --float
+
+set interfaces openvpn vtun{{ code }} shared-secret-key-file /config/openvpn/s2s/shared.key.pem
+
+{# #}
+{% set idx = 3130 %}
+set firewall name WAN_LOCAL rule {{ idx + loop.index }} description 'allow S2S - {{ code }}'
+set firewall name WAN_LOCAL rule {{ idx + loop.index }} action accept
+set firewall name WAN_LOCAL rule {{ idx + loop.index }} destination port 1{{ code }}
+set firewall name WAN_LOCAL rule {{ idx + loop.index }} protocol udp
+
+{# #}
+{% for name, item in peer.LAN.items() if not item.guest|default(false) %}
+set protocols static interface-route {{ item.subnet }} next-hop-interface vtun{{ code }} description 'S2S - {{ code }} (LAN)'
+{% endfor %}
+
+{% endfor %}

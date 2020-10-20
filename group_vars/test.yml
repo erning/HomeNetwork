@@ -1,6 +1,7 @@
 
 NODES:
   "example":
+    FQDN: site10.example.com
 
     LAN:
       "LAN":
@@ -68,13 +69,39 @@ NODES:
           start: 192.168.21.101
           stop: 192.168.21.199
 
-  "peer":
+    VPN_S2S:
+      code: 10
+      peers:
+        - "peer1"
+        - "peer2"
+
+  "peer1":
+    FQDN: site20.example.com
     LAN:
-    WAN:
-    STATIC_MAPPING:
+      "LAN":
+        address: 192.168.101.1/24
+        subnet: 192.168.101.0/24
+      "GUEST":
+        address: 192.168.100.1/24
+        subnet: 192.168.100.0/24
+        guest: yes
+    VPN_S2S:
+      code: 20
+
+  "peer2":
+    FQDN: site30.example.com
+    LAN:
+      "LAN":
+        address: 192.168.111.1/24
+        subnet: 192.168.111.0/24
+      "LAN2":
+        address: 192.168.110.1/24
+        subnet: 192.168.110.0/24
+        guest: no
+    VPN_S2S:
+      code: 30
 
 VPN_SERVER:
   users:
     - { username: foo, password: bar }
   l2tp_shared_secret: foobar
-
