@@ -6,16 +6,18 @@ set vpn ipsec nat-traversal enable
 
 {# set vpn ipsec ipsec-interfaces interface pppoe0 #}
 
-set vpn l2tp remote-access client-ip-pool start {{ VPN_SERVER.L2TP.client_ip_pool.start }}
-set vpn l2tp remote-access client-ip-pool stop {{ VPN_SERVER.L2TP.client_ip_pool.stop }}
+{% set NODE = NODES[inventory_hostname] %}
 
-{% if LAN.LAN.dhcp.dns is defined and not LAN.LAN.dhcp.dns is string %}
-{% for dns in LAN.LAN.dhcp.dns[:2] %}
-set vpn l2tp remote-access dns-servers server-{{ loop.index }} {{ dns }}
+set vpn l2tp remote-access client-ip-pool start {{ NODE.VPN_SERVER.L2TP.client_ip_pool.start }}
+set vpn l2tp remote-access client-ip-pool stop {{ NODE.VPN_SERVER.L2TP.client_ip_pool.stop }}
+
+{% if NODE.LAN["LAN"].dhcp.dns is defined and not NODE.LAN["LAN"].dhcp.dns is string %}
+{% for item in NODE.LAN["LAN"].dhcp.dns[:2] %}
+set vpn l2tp remote-access dns-servers server-{{ loop.index }} {{ item }}
 {% endfor %}
 {% else %}
-{% set address = LAN.LAN.address.split('/') %}
-set vpn l2tp remote-access dns-servers server-1 {{ LAN.LAN.dhcp.dns | default(address[0]) }}
+{% set address = NODE.LAN["LAN"].address.split('/') %}
+set vpn l2tp remote-access dns-servers server-1 {{ NODE.LAN["LAN"].dhcp.dns | default(address[0]) }}
 {% endif %}
 
 set vpn l2tp remote-access idle 1800
@@ -24,10 +26,10 @@ set vpn l2tp remote-access ipsec-settings lifetime 3600
 set vpn l2tp remote-access outside-address 0.0.0.0
 
 set vpn l2tp remote-access ipsec-settings authentication mode pre-shared-secret
-set vpn l2tp remote-access ipsec-settings authentication pre-shared-secret '{{ VPN_SERVER.L2TP.shared_secret}}'
+set vpn l2tp remote-access ipsec-settings authentication pre-shared-secret {{ VPN_SERVER.l2tp_shared_secret }}
 set vpn l2tp remote-access authentication mode local
-{% for item in VPN_SERVER.L2TP.users %}
-set vpn l2tp remote-access authentication local-users username '{{ item.username }}' password '{{ item.password }}'
+{% for item in VPN_SERVER.users %}
+set vpn l2tp remote-access authentication local-users username {{ item.username }} password {{ item.password }}
 {% endfor %}
 
 {# #}

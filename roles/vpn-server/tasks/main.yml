@@ -6,7 +6,7 @@
       vars:
         ansible_connection: ssh
       copy:
-        src: "{{ VPN_SERVER.OPENVPN.name }}/{{ item }}"
+        src: "{{ inventory_hostname }}/{{ item }}"
         dest: /config/openvpn/server/
         mode: '0644'
       with_items:
@@ -27,9 +27,9 @@
       community.network.edgeos_config:
         src: openvpn.j2
 
-  when: VPN_SERVER.OPENVPN is defined
+  when: NODES[inventory_hostname].VPN_SERVER.OPENVPN is defined
 
 - name: setup l2tp server
   community.network.edgeos_config:
     src: l2tp.j2
-  when: VPN_SERVER.L2TP is defined
+  when: NODES[inventory_hostname].VPN_SERVER.L2TP is defined

@@ -1,19 +1,21 @@
 {# #}
 set service dns forwarding cache-size 10000
 
+{% set NODE = NODES[inventory_hostname] %}
+
 {# #}
-{% for id, item in WAN.items() %}
+{% for id, item in NODE.WAN.items() %}
 {% if item.pppoe is defined %}
 set service dns forwarding except-interface pppoe{{ id }}
 {% endif %}
 set service dns forwarding except-interface {{ item.iface }}
 {% endfor %}
 
-{# #}
-# set service dns forwarding options conf-dir='/config/dnsmasq.d'
+{# TODO: #}
+{# set service dns forwarding options conf-dir='/config/dnsmasq.d' #}
 
 {# #}
-{% for id, item in WAN.items() %}
+{% for id, item in NODE.WAN.items() %}
 {% for subitem in item.dns %}
 set service dns forwarding options server={{ subitem }}
 {% endfor %}

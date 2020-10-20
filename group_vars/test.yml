@@ -1,0 +1,80 @@
+
+NODES:
+  "example":
+
+    LAN:
+      "LAN":
+        description: corporate network
+        iface: eth0
+        address: 192.168.1.1/24
+        subnet: 192.168.1.0/24
+        dhcp:
+          router: 192.168.1.1
+          dns:
+            - 192.168.1.2
+          lease: 86400
+          start: 192.168.1.101
+          stop: 192.168.1.199
+      "GUEST":
+        description: guest network
+        iface: eth0
+        vlan: 1003
+        address: 192.168.0.1/24
+        subnet: 192.168.0.1/24
+        guest: yes
+        dhcp:
+          start: 192.168.0.101
+          stop: 192.168.0.199
+
+    WAN:
+      1:
+        description: China Mobile
+        iface: eth1
+        pppoe:
+          mtu: 1492
+          username: user
+          password: pass
+        dns:
+          - 211.136.112.50
+          - 211.136.150.66
+        distance: 10
+      2:
+        description: China Telecom
+        iface: eth2
+        pppoe:
+        dns:
+          - 202.96.209.133
+          - 202.96.209.5
+
+    STATIC_MAPPING:
+      - name: IPTV-BOX-CT
+        mac: a0:00:00:00:00:01
+        ip: 192.168.0.41
+        lan: GUEST
+        stick_dns: 2
+        features:
+          ShanghaiTelecomIPTV: yes
+      - name: IPTV-BOX-CM
+        mac: a0:00:00:00:00:02
+        ip: 192.168.0.42
+        lan: GUEST
+        stick_dns: 1
+
+    VPN_SERVER:
+      OPENVPN:
+        subnet: 192.168.11.0/24
+      L2TP:
+        client_ip_pool:
+          start: 192.168.21.101
+          stop: 192.168.21.199
+
+  "peer":
+    LAN:
+    WAN:
+    STATIC_MAPPING:
+
+VPN_SERVER:
+  users:
+    - { username: foo, password: bar }
+  l2tp_shared_secret: foobar
+
