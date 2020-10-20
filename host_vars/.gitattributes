@@ -1,0 +1,2 @@
+.gitattributes !filter !diff
+site-*.yml filter=git-crypt diff=git-crypt

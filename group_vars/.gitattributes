@@ -1,0 +1,2 @@
+.gitattributes !filter !diff
+prod.yml filter=git-crypt diff=git-crypt
