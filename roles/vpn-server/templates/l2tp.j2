@@ -1,0 +1,55 @@
+{# #}
+set vpn ipsec allow-access-to-local-interface disable
+set vpn ipsec auto-firewall-nat-exclude disable
+set vpn ipsec nat-networks allowed-network 0.0.0.0/0
+set vpn ipsec nat-traversal enable
+
+{# set vpn ipsec ipsec-interfaces interface pppoe0 #}
+
+set vpn l2tp remote-access client-ip-pool start {{ VPN_SERVER.L2TP.client_ip_pool.start }}
+set vpn l2tp remote-access client-ip-pool stop {{ VPN_SERVER.L2TP.client_ip_pool.stop }}
+
+{% if LAN.LAN.dhcp.dns is defined and not LAN.LAN.dhcp.dns is string %}
+{% for dns in LAN.LAN.dhcp.dns[:2] %}
+set vpn l2tp remote-access dns-servers server-{{ loop.index }} {{ dns }}
+{% endfor %}
+{% else %}
+{% set address = LAN.LAN.address.split('/') %}
+set vpn l2tp remote-access dns-servers server-1 {{ LAN.LAN.dhcp.dns | default(address[0]) }}
+{% endif %}
+
+set vpn l2tp remote-access idle 1800
+set vpn l2tp remote-access ipsec-settings ike-lifetime 3600
+set vpn l2tp remote-access ipsec-settings lifetime 3600
+set vpn l2tp remote-access outside-address 0.0.0.0
+
+set vpn l2tp remote-access ipsec-settings authentication mode pre-shared-secret
+set vpn l2tp remote-access ipsec-settings authentication pre-shared-secret '{{ VPN_SERVER.L2TP.shared_secret}}'
+set vpn l2tp remote-access authentication mode local
+{% for item in VPN_SERVER.L2TP.users %}
+set vpn l2tp remote-access authentication local-users username '{{ item.username }}' password '{{ item.password }}'
+{% endfor %}
+
+{# #}
+{% set idx = 3120 %}
+set firewall name WAN_LOCAL rule {{ idx }} description 'allow IKE (L2TP)'
+set firewall name WAN_LOCAL rule {{ idx }} action accept
+set firewall name WAN_LOCAL rule {{ idx }} destination port 500
+set firewall name WAN_LOCAL rule {{ idx }} protocol udp
+
+{% set idx = idx + 1 %}
+set firewall name WAN_LOCAL rule {{ idx }} description 'allow ESP (L2TP)'
+set firewall name WAN_LOCAL rule {{ idx }} action accept
+set firewall name WAN_LOCAL rule {{ idx }} protocol 50
+
+{% set idx = idx + 1 %}
+set firewall name WAN_LOCAL rule {{ idx }} description 'allow NAT-T (L2TP)'
+set firewall name WAN_LOCAL rule {{ idx }} action accept
+set firewall name WAN_LOCAL rule {{ idx }} destination port 4500
+set firewall name WAN_LOCAL rule {{ idx }} protocol udp
+
+{% set idx = idx + 1 %}
+set firewall name WAN_LOCAL rule {{ idx }} description 'allow VPN server (L2TP)'
+set firewall name WAN_LOCAL rule {{ idx }} action accept
+set firewall name WAN_LOCAL rule {{ idx }} destination port 1701
+set firewall name WAN_LOCAL rule {{ idx }} protocol udp

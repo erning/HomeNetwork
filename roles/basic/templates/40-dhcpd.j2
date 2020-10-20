@@ -7,7 +7,7 @@ set service dhcp-server hostfile-update disable
 {% set address = item.address.split('/') %}
 set {{ prefix }} {{ name }} authoritative disable
 set {{ prefix }} {{ name }} subnet {{ item.subnet }} default-router {{ item.dhcp.router | default(address[0]) }}
-{% if item.dhcp.dns is defined and item.dhcp.dns is iterable %}
+{% if item.dhcp.dns is defined and not item.dhcp.dns is string %}
 {% for dns in item.dhcp.dns %}
 set {{ prefix }} {{ name }} subnet {{ item.subnet }} dns-server {{ dns }}
 {% endfor %}

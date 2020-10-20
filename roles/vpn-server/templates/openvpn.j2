@@ -1,0 +1,53 @@
+{# #}
+{% set iface = VPN_SERVER.OPENVPN.iface | default("vtun8") %}
+{% set port = VPN_SERVER.OPENVPN.port | default(1194) %}
+set interfaces openvpn {{ iface }} description 'VPN - SERVER'
+
+set interfaces openvpn {{ iface }} encryption aes256
+set interfaces openvpn {{ iface }} hash sha256
+
+{# set interfaces openvpn {{ iface }} firewall in modify POLICY_ROUTE #}
+set interfaces openvpn {{ iface }} firewall in name LAN_IN
+set interfaces openvpn {{ iface }} firewall local name LAN_LOCAL
+set interfaces openvpn {{ iface }} firewall out name LAN_OUT
+
+set interfaces openvpn {{ iface }} local-port {{ port }}
+set interfaces openvpn {{ iface }} protocol udp
+set interfaces openvpn {{ iface }} mode server
+
+set interfaces openvpn {{ iface }} openvpn-option '--script-security 3'
+set interfaces openvpn {{ iface }} openvpn-option '--client-cert-not-required'
+set interfaces openvpn {{ iface }} openvpn-option '--auth-user-pass-verify /config/openvpn/server/auth.sh via-env'
+set interfaces openvpn {{ iface }} openvpn-option '--duplicate-cn'
+set interfaces openvpn {{ iface }} openvpn-option '--user nobody'
+set interfaces openvpn {{ iface }} openvpn-option '--group nogroup'
+set interfaces openvpn {{ iface }} openvpn-option '--float'
+
+set interfaces openvpn {{ iface }} replace-default-route
+
+{% if LAN.LAN.dhcp.dns is defined and not LAN.LAN.dhcp.dns is string %}
+{% for dns in LAN.LAN.dhcp.dns %}
+set interfaces openvpn {{ iface }} server name-server {{ dns }}
+{% endfor %}
+{% else %}
+{% set address = LAN.LAN.address.split('/') %}
+set interfaces openvpn {{ iface }} server name-server {{ LAN.LAN.dhcp.dns | default(address[0]) }}
+{% endif %}
+
+{% for name, item in LAN.items() if item.guest is undefined or not item.guest %}
+set interfaces openvpn {{ iface }} server push-route {{ item.subnet }}
+{% endfor %}
+
+set interfaces openvpn {{ iface }} server subnet {{ VPN_SERVER.OPENVPN.subnet }}
+
+set interfaces openvpn {{ iface }} tls ca-cert-file '/config/openvpn/server/ca.pem'
+set interfaces openvpn {{ iface }} tls dh-file      '/config/openvpn/server/dh.pem'
+set interfaces openvpn {{ iface }} tls cert-file    '/config/openvpn/server/server.crt.pem'
+set interfaces openvpn {{ iface }} tls key-file     '/config/openvpn/server/server.key.pem'
+
+{# #}
+{% set idx = 3110 %}
+set firewall name WAN_LOCAL rule {{ idx }} description 'allow VPN server (OpenVPN)'
+set firewall name WAN_LOCAL rule {{ idx }} action accept
+set firewall name WAN_LOCAL rule {{ idx }} destination port {{ port }}
+set firewall name WAN_LOCAL rule {{ idx }} protocol udp

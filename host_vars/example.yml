@@ -12,8 +12,7 @@ LAN:
     subnet: 192.168.1.0/24
     dhcp:
       router: 192.168.1.1
-      dns:
-        - 192.168.1.1
+      dns: 192.168.1.1
       lease: 86400
       start: 192.168.1.101
       stop: 192.168.1.199
@@ -26,6 +25,8 @@ LAN:
     subnet: 192.168.0.1/24
     guest: yes
     dhcp:
+      dns:
+        - 192.168.0.2
       start: 192.168.0.101
       stop: 192.168.0.199
 
@@ -64,3 +65,17 @@ STATIC_MAPPING:
     ip: 192.168.0.42
     lan: GUEST
     stick_dns: 1
+
+VPN_SERVER:
+  OPENVPN:
+    name: example
+    subnet: 192.168.11.0/24
+    users:
+      - { username: foo, password: bar }
+  L2TP:
+    shared_secret: foobar
+    client_ip_pool:
+      start: 192.168.21.101
+      stop: 192.168.21.199
+    users:
+      - { username: foo, password: bar }

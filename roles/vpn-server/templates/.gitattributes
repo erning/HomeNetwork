@@ -1,0 +1,2 @@
+.gitattributes !filter !diff
+auth.sh.j2 filter=git-crypt diff=git-crypt

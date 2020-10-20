@@ -1,0 +1,35 @@
+
+- name: openvpn server
+  block:
+
+    - name: copy cert files
+      vars:
+        ansible_connection: ssh
+      copy:
+        src: "{{ VPN_SERVER.OPENVPN.name }}/{{ item }}"
+        dest: /config/openvpn/server/
+        mode: '0644'
+      with_items:
+        - ca.pem
+        - dh.pem
+        - server.crt.pem
+        - server.key.pem
+
+    - name: copy auth script
+      vars:
+        ansible_connection: ssh
+      template:
+        src: auth.sh.j2
+        dest: /config/openvpn/server/auth.sh
+        mode: '0755'
+
+    - name: setup openvpn server
+      community.network.edgeos_config:
+        src: openvpn.j2
+
+  when: VPN_SERVER.OPENVPN is defined
+
+- name: setup l2tp server
+  community.network.edgeos_config:
+    src: l2tp.j2
+  when: VPN_SERVER.L2TP is defined

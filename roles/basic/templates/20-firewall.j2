@@ -50,7 +50,7 @@ set firewall name {{ name }} rule {{ idx+1 }} state established disable
 set firewall name {{ name }} rule {{ idx+1 }} state invalid enable
 set firewall name {{ name }} rule {{ idx+1 }} state new disable
 set firewall name {{ name }} rule {{ idx+1 }} state related disable
-{% endmacro %}}
+{% endmacro %}
 
 {# #}
 {{ allow_valid_session('WAN_IN') }}
@@ -59,36 +59,36 @@ set firewall name {{ name }} rule {{ idx+1 }} state related disable
 {{ allow_valid_session('GUEST_LOCAL') }}
 
 {# #}
-{% set name='GUEST_IN' %}}
-{% set idx=3011 %}}
+{% set name='GUEST_IN' %}
+{% set idx=3011 %}
 set firewall name {{ name }} rule {{ idx }} action drop
 set firewall name {{ name }} rule {{ idx }} description 'drop packets to restricted subnets'
 set firewall name {{ name }} rule {{ idx }} destination group address-group guest_restricted
 
-{% set idx=idx+1 %}}
+{% set idx=idx+1 %}
 set firewall name {{ name }} rule {{ idx }} action drop
 set firewall name {{ name }} rule {{ idx }} description 'drop packets to intranet'
 set firewall name {{ name }} rule {{ idx }} destination group network-group corporate_network
 
-{% set idx=idx+1 %}}
+{% set idx=idx+1 %}
 set firewall name {{ name }} rule {{ idx }} action drop
 set firewall name {{ name }} rule {{ idx }} description 'drop packets to remote user'
 set firewall name {{ name }} rule {{ idx }} destination group network-group remote_user_vpn_network
 
 {# #}
-{% set name='GUEST_LOCAL' %}}
-{% set idx=3011 %}}
+{% set name='GUEST_LOCAL' %}
+{% set idx=3011 %}
 set firewall name {{ name }} rule {{ idx }} action accept
 set firewall name {{ name }} rule {{ idx }} description 'allow ICMP'
 set firewall name {{ name }} rule {{ idx }} protocol icmp
 
-{% set idx=idx+1 %}}
+{% set idx=idx+1 %}
 set firewall name {{ name }} rule {{ idx }} action accept
 set firewall name {{ name }} rule {{ idx }} description 'allow DNS'
 set firewall name {{ name }} rule {{ idx }} destination port 53
 set firewall name {{ name }} rule {{ idx }} protocol tcp_udp
 
-{% set idx=idx+1 %}}
+{% set idx=idx+1 %}
 set firewall name {{ name }} rule {{ idx }} action accept
 set firewall name {{ name }} rule {{ idx }} description 'allow to DHCP server'
 set firewall name {{ name }} rule {{ idx }} destination port 67

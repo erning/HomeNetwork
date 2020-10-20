@@ -50,7 +50,7 @@ set service nat rule {{ 5000 + id}} log disable
 set protocols static interface-route 0.0.0.0/0 next-hop-interface pppoe{{ id }} distance {{ item.distance | default(1) }}
 {% for dns in item.dns %}
 set protocols static interface-route {{ dns }}/32 next-hop-interface pppoe{{ id }} description 'DNS - {{ item.description }}'
-{% endfor %}}
+{% endfor %}
 
 {% else %}
 {# TODO: dhcp or static ip for wan #}

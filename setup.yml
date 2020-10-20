@@ -4,3 +4,4 @@
 
   roles:
     - basic
+    - vpn-server
