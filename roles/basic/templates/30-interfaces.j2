@@ -1,41 +1,55 @@
 {# #}
-{% for vlan, item in LAN.items() %}
-{% set iface = "{} vif {}".format(item.iface, vlan) if vlan > 0 else item.iface %}
-{% set name = "GUEST" if item.guest|default(false) else "LAN" %}
-set interfaces ethernet {{ iface }} address {{ item.ip }}/{{ item.mask }}
-set interfaces ethernet {{ iface }} firewall in name {{ name }}_IN
-set interfaces ethernet {{ iface }} firewall local name {{ name }}_LOCAL
-set interfaces ethernet {{ iface }} firewall out name {{ name }}_OUT
+{% for name, item in LAN.items() %}
+{% set iface = "{} vif {}".format(item.iface, item.vlan) if item.vlan is defined and item.vlan > 0 else item.iface %}
+{% set fwname = "GUEST" if item.guest|default(false) else "LAN" %}
+set interfaces ethernet {{ iface }} address {{ item.address }}
+set interfaces ethernet {{ iface }} firewall in name {{ fwname }}_IN
+set interfaces ethernet {{ iface }} firewall local name {{ fwname }}_LOCAL
+set interfaces ethernet {{ iface }} firewall out name {{ fwname }}_OUT
 {% endfor %}
 
 {# #}
-{% for id, item in PPPOE.items() %}
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} description '{{ item.description }}'
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} default-route none
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} name-server none
-
-{% if item.username or item.password %}
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} user-id '{{ item.username }}'
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} password '{{ item.password }}'
-{% endif %}
-
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall in name WAN_IN
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall local name WAN_LOCAL
-set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall out name WAN_OUT
-
+{% for id, item in WAN.items() %}
+set interfaces ethernet {{ item.iface }} description '{{ item.description | default("") }}'
 set interfaces ethernet {{ item.iface }} firewall in name WAN_IN
 set interfaces ethernet {{ item.iface }} firewall local name WAN_LOCAL
 set interfaces ethernet {{ item.iface }} firewall out name WAN_OUT
 
+{% if item.pppoe is defined %}
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} description '{{ item.description | default("") }}'
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} default-route none
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} name-server none
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall in name WAN_IN
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall local name WAN_LOCAL
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} firewall out name WAN_OUT
+
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} mtu '{{ item.pppoe.mtu | default(1492)}}'
+{% if item.pppoe.username is defined %}
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} user-id '{{ item.pppoe.username }}'
+{% endif %}
+{% if item.pppoe.password is defined %}
+set interfaces ethernet {{ item.iface }} pppoe {{ id }} password '{{ item.pppoe.password }}'
+{% endif %}
+
+{# masquerade NAT #}
 set service nat rule {{ 5000 + id}} outbound-interface pppoe{{ id }}
 set service nat rule {{ 5000 + id}} protocol all
 set service nat rule {{ 5000 + id}} type masquerade
 set service nat rule {{ 5000 + id}} log disable
 
+{# static route #}
 set protocols static interface-route 0.0.0.0/0 next-hop-interface pppoe{{ id }} distance {{ item.distance | default(1) }}
-
 {% for dns in item.dns %}
 set protocols static interface-route {{ dns }}/32 next-hop-interface pppoe{{ id }} description 'DNS - {{ item.description }}'
 {% endfor %}}
+
+{% else %}
+{# TODO: dhcp or static ip for wan #}
+set service nat rule {{ 5000 + id}} outbound-interface {{ item.iface }}
+set service nat rule {{ 5000 + id}} protocol all
+set service nat rule {{ 5000 + id}} type masquerade
+set service nat rule {{ 5000 + id}} log disable
+
+{% endif %} {# pppoe is defined #}
 
 {% endfor %}
