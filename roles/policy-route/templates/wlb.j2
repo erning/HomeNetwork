@@ -1,0 +1,33 @@
+{# #}
+{% set NODE = NODES[inventory_hostname] %}
+{% for name, item in NODE.LOAD_BALANCE.items() %}
+set load-balance group {{ name }} lb-local disable
+{# set load-balance group {{ name }} transition-script /config/scripts/lbt.sh #}
+
+delete load-balance group {{ name }} interface
+
+{% for iface, subitem in item.interfaces.items() %}
+set load-balance group {{ name }} interface {{ iface }}
+
+{% if subitem.weight is defined %}
+set load-balance group {{ name }} interface {{ iface }} weight {{ subitem.weight }}
+{% endif %}
+
+{% if subitem.failover | default(false) %}
+set load-balance group {{ name }} interface {{ iface }} failover-only
+{% endif %}
+
+{% if subitem.test.ping is defined %}
+set load-balance group {{ name }} interface {{ iface }} route-test type ping target {{ subitem.test.ping }}
+{% endif %}
+
+{% if subitem.test.success is defined %}
+set load-balance group {{ name }} interface {{ iface }} route-test count success {{ subitem.test.success }}
+{% endif %}
+
+{% if subitem.test.failure is defined %}
+set load-balance group {{ name }} interface {{ iface }} route-test count failure {{ subitem.test.failure }}
+{% endif %}
+
+{% endfor %}
+{% endfor %}

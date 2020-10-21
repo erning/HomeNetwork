@@ -47,19 +47,27 @@ NODES:
           - 202.96.209.133
           - 202.96.209.5
 
-    STATIC_MAPPING:
-      - name: IPTV-BOX-CT
-        mac: a0:00:00:00:00:01
-        ip: 192.168.0.41
-        lan: GUEST
-        stick_dns: 2
-        features:
-          ShanghaiTelecomIPTV: yes
-      - name: IPTV-BOX-CM
-        mac: a0:00:00:00:00:02
-        ip: 192.168.0.42
-        lan: GUEST
-        stick_dns: 1
+    LOAD_BALANCE:
+      "WLB-DEFAULT":
+        interfaces:
+          pppoe1:
+            weight: 1
+          pppoe2:
+            weight: 2
+      "WLB-CM":
+        interfaces:
+          pppoe1:
+          pppoe2:
+            failover: yes
+      "WLB-CT":
+        interfaces:
+          pppoe1:
+            failover: yes
+          pppoe2:
+            test:
+              ping: 114.114.114.114
+              success: 3
+              failure: 5
 
     VPN_SERVER:
       OPENVPN:
@@ -74,6 +82,20 @@ NODES:
       peers:
         - "peer1"
         - "peer2"
+
+    STATIC_MAPPING:
+      - name: IPTV-BOX-CT
+        mac: a0:00:00:00:00:01
+        ip: 192.168.0.41
+        lan: GUEST
+        stick_dns: 2
+        features:
+          ShanghaiTelecomIPTV: yes
+      - name: IPTV-BOX-CM
+        mac: a0:00:00:00:00:02
+        ip: 192.168.0.42
+        lan: GUEST
+        stick_dns: 1
 
   "peer1":
     FQDN: site20.example.com

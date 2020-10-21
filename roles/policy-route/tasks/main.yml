@@ -1,0 +1,3 @@
+- name: setup load balance
+  community.network.edgeos_config:
+    src: wlb.j2
