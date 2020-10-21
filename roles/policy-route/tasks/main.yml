@@ -1,3 +1,28 @@
 - name: setup load balance
   community.network.edgeos_config:
     src: wlb.j2
+  when: NODES[inventory_hostname].LOAD_BALANCE is defined
+
+- name: policy route
+  block:
+
+  - name: setup rules
+    community.network.edgeos_config:
+      src: pbr.j2
+
+  - name: apply to interfaces
+    community.network.edgeos_config:
+      src: apply.j2
+
+  - name: copy support files
+    vars:
+      ansible_connection: ssh
+    copy:
+      src: "{{ item }}"
+      dest: /config/scripts/post-config.d/
+      mode: '0755'
+    with_items:
+      - 50-ipset-setup.sh
+      - 50-l2tp-fix.sh
+
+  when: NODES[inventory_hostname].POLICY_ROUTE is defined

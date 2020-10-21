@@ -1,0 +1,19 @@
+{# #}
+{% set NODE = NODES[inventory_hostname] %}
+{% for name, item in NODE.LAN.items() %}
+{% set iface = "{} vif {}".format(item.iface, item.vlan) if item.vlan is defined and item.vlan > 0 else item.iface %}
+set interfaces ethernet {{ iface }} firewall in modify POLICY_ROUTE
+{% endfor %}
+
+{# #}
+{% for item in NODE.VPN_S2S.peers %}
+{% set peer = NODES[item]%}
+{% set a = NODE.VPN_S2S.code %}
+{% set b = peer.VPN_S2S.code %}
+{% set code = "{}{}".format(a, b) if a < b else "{}{}".format(b, a) %}
+set interfaces openvpn vtun{{ code }} firewall in modify POLICY_ROUTE
+{% endfor %}
+
+{# #}
+{% set iface = NODE.VPN_SERVER.OPENVPN.iface | default("vtun8") %}
+set interfaces openvpn {{ iface }} firewall in modify POLICY_ROUTE

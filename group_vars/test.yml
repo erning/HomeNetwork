@@ -69,6 +69,30 @@ NODES:
               success: 3
               failure: 5
 
+    POLICY_ROUTE:
+      200:
+        - via: WLB-CM
+          src: client-prefer-cm
+        - via: WLB-CT
+          src: client-prefer-ct
+        - via: WLB-DEFAULT
+          src: client-prefer-cn
+      300:
+        - via: WLB-CM
+          dst: cm-network
+        - via: WLB-CT
+          dst: ct-network
+        - via: WLB-DEFAULT
+          dst: cn-network
+      500:
+        - via: WLB-CM
+          src: client-default-cm
+        - via: WLB-CT
+          src: client-default-ct
+        - via: WLB-cn
+          src: client-default-cn
+      DEFAULT: WLB-DEFAULT
+
     VPN_SERVER:
       OPENVPN:
         subnet: 192.168.11.0/24

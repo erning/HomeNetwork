@@ -1,0 +1,44 @@
+{# #}
+{% set NODE = NODES[inventory_hostname] %}
+delete firewall modify POLICY_ROUTE rule
+
+{% set idx = 100 %}
+{% for item in ["192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8"] %}
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} action modify
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} modify table main
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} destination address {{ item }}
+{% endfor %}
+
+{# 根据客户端 IP，选择线路 #}
+{% set idx = 200 %}
+{% for item in NODE.POLICY_ROUTE[idx] %}
+set firewall group address-group {{ item.src }}
+
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} action modify
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} modify lb-group {{ item.via }}
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} source group address-group {{ item.src }}
+{% endfor %}
+
+{# 根据目的地 IP，选择线路 #}
+{% set idx = 300 %}
+{% for item in NODE.POLICY_ROUTE[idx] %}
+set firewall group network-group {{ item.dst }}
+
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} action modify
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} modify lb-group {{ item.via }}
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} destination group network-group {{ item.dst }}
+{% endfor %}
+
+{# 根据客户端 IP，选择线路 #}
+{% set idx = 500 %}
+{% for item in NODE.POLICY_ROUTE[idx] %}
+set firewall group address-group {{ item.src }}
+
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} action modify
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} modify lb-group {{ item.via }}
+set firewall modify POLICY_ROUTE rule {{ idx+loop.index }} source group address-group {{ item.src }}
+{% endfor %}
+
+{# DEFAULT #}
+set firewall modify POLICY_ROUTE rule 700 action modify
+set firewall modify POLICY_ROUTE rule 700 modify lb-group {{ NODE.POLICY_ROUTE.DEFAULT }}
