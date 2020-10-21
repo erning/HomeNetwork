@@ -15,5 +15,5 @@ set interfaces openvpn vtun{{ code }} firewall in modify POLICY_ROUTE
 {% endfor %}
 
 {# #}
-{% set iface = NODE.VPN_SERVER.OPENVPN.iface | default("vtun8") %}
+{% set iface = NODE.VPN_SERVER.OpenVPN.iface | default("vtun8") %}
 set interfaces openvpn {{ iface }} firewall in modify POLICY_ROUTE

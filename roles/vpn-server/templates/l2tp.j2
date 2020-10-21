@@ -55,3 +55,6 @@ set firewall name WAN_LOCAL rule {{ idx }} description 'allow VPN server (L2TP)'
 set firewall name WAN_LOCAL rule {{ idx }} action accept
 set firewall name WAN_LOCAL rule {{ idx }} destination port 1701
 set firewall name WAN_LOCAL rule {{ idx }} protocol udp
+
+{# #}
+set firewall group network-group remote_user_vpn_network network {{ NODE.VPN_SERVER.L2TP.subnet }}

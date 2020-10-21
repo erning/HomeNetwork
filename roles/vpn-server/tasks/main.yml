@@ -27,7 +27,7 @@
       community.network.edgeos_config:
         src: openvpn.j2
 
-  when: NODES[inventory_hostname].VPN_SERVER.OPENVPN is defined
+  when: NODES[inventory_hostname].VPN_SERVER.OpenVPN is defined
 
 - name: setup l2tp server
   community.network.edgeos_config:

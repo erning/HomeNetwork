@@ -1,4 +1,8 @@
 {# #}
+{#
+delete firewall group network-group corporate_network network
+delete firewall group network-group guest_network network
+#}
 {% set NODE = NODES[inventory_hostname] %}
 {% for name, item in NODE.LAN.items() %}
 {% set iface = "{} vif {}".format(item.iface, item.vlan) if item.vlan is defined and item.vlan > 0 else item.iface %}
@@ -8,6 +12,9 @@ set interfaces ethernet {{ iface }} address {{ item.address }}
 set interfaces ethernet {{ iface }} firewall in name {{ fwname }}_IN
 set interfaces ethernet {{ iface }} firewall local name {{ fwname }}_LOCAL
 set interfaces ethernet {{ iface }} firewall out name {{ fwname }}_OUT
+
+{% set fwname = "guest_network" if item.guest|default(false) else "corporate_network" %}
+set firewall group network-group {{ fwname }} network {{ item.subnet }}
 {% endfor %}
 
 {# #}

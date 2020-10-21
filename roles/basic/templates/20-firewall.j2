@@ -1,4 +1,9 @@
 {# #}
+set firewall options mss-clamp mss 1452
+set firewall options mss-clamp interface-type pppoe
+set firewall options mss-clamp interface-type pptp
+
+{# #}
 set firewall group network-group corporate_network description 'corporate subnets'
 set firewall group network-group guest_network description 'guest subnets'
 set firewall group network-group remote_client_vpn_network description 'remote client VPN subnets'

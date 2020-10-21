@@ -39,8 +39,10 @@ set firewall name WAN_LOCAL rule {{ idx + loop.index }} destination port 1{{ cod
 set firewall name WAN_LOCAL rule {{ idx + loop.index }} protocol udp
 
 {# #}
+{# delete firewall group network-group corporate_network network #}
 {% for name, item in peer.LAN.items() if not item.guest|default(false) %}
 set protocols static interface-route {{ item.subnet }} next-hop-interface vtun{{ code }} description 'S2S - {{ code }} (LAN)'
+set firewall group network-group remote_site_vpn_network network {{ item.subnet }}
 {% endfor %}
 
 {% endfor %}

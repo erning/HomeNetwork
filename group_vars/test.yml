@@ -21,7 +21,7 @@ NODES:
         iface: eth0
         vlan: 1003
         address: 192.168.0.1/24
-        subnet: 192.168.0.1/24
+        subnet: 192.168.0.0/24
         guest: yes
         dhcp:
           start: 192.168.0.101
@@ -94,9 +94,10 @@ NODES:
       DEFAULT: WLB-DEFAULT
 
     VPN_SERVER:
-      OPENVPN:
+      OpenVPN:
         subnet: 192.168.11.0/24
       L2TP:
+        subnet: 192.168.21.0/24
         client_ip_pool:
           start: 192.168.21.101
           stop: 192.168.21.199

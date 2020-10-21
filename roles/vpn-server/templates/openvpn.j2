@@ -1,7 +1,7 @@
 {# #}
 {% set NODE = NODES[inventory_hostname] %}
-{% set iface = NODE.VPN_SERVER.OPENVPN.iface | default("vtun8") %}
-{% set port = NODE.VPN_SERVER.OPENVPN.port | default(1194) %}
+{% set iface = NODE.VPN_SERVER.OpenVPN.iface | default("vtun8") %}
+{% set port = NODE.VPN_SERVER.OpenVPN.port | default(1194) %}
 set interfaces openvpn {{ iface }} description 'VPN - SERVER'
 
 set interfaces openvpn {{ iface }} encryption aes256
@@ -39,7 +39,7 @@ set interfaces openvpn {{ iface }} server name-server {{ NODE.LAN["LAN"].dhcp.dn
 set interfaces openvpn {{ iface }} server push-route {{ item.subnet }}
 {% endfor %}
 
-set interfaces openvpn {{ iface }} server subnet {{ NODE.VPN_SERVER.OPENVPN.subnet }}
+set interfaces openvpn {{ iface }} server subnet {{ NODE.VPN_SERVER.OpenVPN.subnet }}
 
 set interfaces openvpn {{ iface }} tls ca-cert-file /config/openvpn/server/ca.pem
 set interfaces openvpn {{ iface }} tls dh-file /config/openvpn/server/dh.pem
@@ -52,3 +52,6 @@ set firewall name WAN_LOCAL rule {{ idx }} description 'allow VPN server (OpenVP
 set firewall name WAN_LOCAL rule {{ idx }} action accept
 set firewall name WAN_LOCAL rule {{ idx }} destination port {{ port }}
 set firewall name WAN_LOCAL rule {{ idx }} protocol udp
+
+{# #}
+set firewall group network-group remote_user_vpn_network network {{ NODE.VPN_SERVER.OpenVPN.subnet }}
