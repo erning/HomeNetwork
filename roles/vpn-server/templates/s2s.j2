@@ -39,10 +39,23 @@ set firewall name WAN_LOCAL rule {{ idx + loop.index }} destination port 1{{ cod
 set firewall name WAN_LOCAL rule {{ idx + loop.index }} protocol udp
 
 {# #}
-{# delete firewall group network-group corporate_network network #}
-{% for name, item in peer.LAN.items() if not item.guest|default(false) %}
-set protocols static interface-route {{ item.subnet }} next-hop-interface vtun{{ code }} description 'S2S - {{ code }} (LAN)'
-set firewall group network-group remote_site_vpn_network network {{ item.subnet }}
+{% for name, item in peer.LAN.items() %}
+set protocols static interface-route {{ item.subnet }} next-hop-interface vtun{{ code }} description 'S2S - {{ code }} ({{ name }})'
+{% if not item.guest|default(false) %}
+set firewall group network-group remote_corporate_network network {{ item.subnet }}
+{% else %}
+set firewall group network-group remote_guest_network network {{ item.subnet }}
+{% endif %}
 {% endfor %}
+
+{% if peer.VPN_SERVER.OpenVPN is defined %}
+set protocols static interface-route {{ peer.VPN_SERVER.OpenVPN.subnet }} next-hop-interface vtun{{ code }} description 'S2S - {{ code }} (OpenVPN)'
+set firewall group network-group remote_user_vpn_network network {{ peer.VPN_SERVER.OpenVPN.subnet }}
+{% endif %}
+
+{% if peer.VPN_SERVER.L2TP is defined %}
+set protocols static interface-route {{ peer.VPN_SERVER.L2TP.subnet }} next-hop-interface vtun{{ code }} description 'S2S - {{ code }} (L2TP)'
+set firewall group network-group remote_user_vpn_network network {{ peer.VPN_SERVER.OpenVPN.subnet }}
+{% endif %}
 
 {% endfor %}

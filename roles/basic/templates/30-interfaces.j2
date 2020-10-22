@@ -1,8 +1,4 @@
 {# #}
-{#
-delete firewall group network-group corporate_network network
-delete firewall group network-group guest_network network
-#}
 {% set NODE = NODES[inventory_hostname] %}
 {% for name, item in NODE.LAN.items() %}
 {% set iface = "{} vif {}".format(item.iface, item.vlan) if item.vlan is defined and item.vlan > 0 else item.iface %}

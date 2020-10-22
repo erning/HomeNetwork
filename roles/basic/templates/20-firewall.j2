@@ -6,12 +6,20 @@ set firewall options mss-clamp interface-type pptp
 {# #}
 set firewall group network-group corporate_network description 'corporate subnets'
 set firewall group network-group guest_network description 'guest subnets'
-set firewall group network-group remote_client_vpn_network description 'remote client VPN subnets'
-set firewall group network-group remote_site_vpn_network description 'remote site VPN subnets'
-set firewall group network-group remote_user_vpn_network description 'remote user VPN subnets'
 
-# set firewall group ipv6-network-group corporate_networkv6 description 'IPv6 corporate subnets'
-# set firewall group ipv6-network-group guest_networkv6 description 'IPv6 guest subnets'
+set firewall group network-group remote_user_vpn_network description 'remote user VPN subnets'
+set firewall group network-group remote_corporate_network description 'remote corporate subnets'
+set firewall group network-group remote_guest_network description 'remote guest subnets'
+
+{# TODO:
+delete firewall group network-group corporate_network network
+delete firewall group network-group guest_network network
+#}
+
+{#
+set firewall group ipv6-network-group corporate_networkv6 description 'IPv6 corporate subnets'
+set firewall group ipv6-network-group guest_networkv6 description 'IPv6 guest subnets'
+#}
 
 {# #}
 set firewall group address-group guest_allow description 'allow addresses for guests'
@@ -38,7 +46,7 @@ set firewall group address-group guest_restricted address 10.0.0.0/8
 {% for name, action, desc in items %}
 set firewall name {{ name }} description '{{ desc }}'
 set firewall name {{ name }} default-action {{ action }}
-{# delete firewall name {{ name }} rule #}
+delete firewall name {{ name }} rule
 {% endfor %}
 
 {# #}
@@ -66,6 +74,11 @@ set firewall name {{ name }} rule {{ idx+1 }} state related disable
 {# #}
 {% set name='GUEST_IN' %}
 {% set idx=3011 %}
+set firewall name {{ name }} rule {{ idx }} action accept
+set firewall name {{ name }} rule {{ idx }} description 'allow packets to guest allowed subnets'
+set firewall name {{ name }} rule {{ idx }} destination group address-group guest_allow
+
+{% set idx=idx+1 %}
 set firewall name {{ name }} rule {{ idx }} action drop
 set firewall name {{ name }} rule {{ idx }} description 'drop packets to restricted subnets'
 set firewall name {{ name }} rule {{ idx }} destination group address-group guest_restricted
@@ -74,6 +87,11 @@ set firewall name {{ name }} rule {{ idx }} destination group address-group gues
 set firewall name {{ name }} rule {{ idx }} action drop
 set firewall name {{ name }} rule {{ idx }} description 'drop packets to intranet'
 set firewall name {{ name }} rule {{ idx }} destination group network-group corporate_network
+
+{% set idx=idx+1 %}
+set firewall name {{ name }} rule {{ idx }} action drop
+set firewall name {{ name }} rule {{ idx }} description 'drop packets to remote intranet'
+set firewall name {{ name }} rule {{ idx }} destination group network-group remote_corporate_network
 
 {% set idx=idx+1 %}
 set firewall name {{ name }} rule {{ idx }} action drop

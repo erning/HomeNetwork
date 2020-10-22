@@ -132,6 +132,13 @@ NODES:
         address: 192.168.100.1/24
         subnet: 192.168.100.0/24
         guest: yes
+
+    VPN_SERVER:
+      OpenVPN:
+        subnet: 192.168.102.0/24
+      L2TP:
+        subnet: 192.168.103.0/24
+
     VPN_S2S:
       code: 20
 
@@ -145,6 +152,13 @@ NODES:
         address: 192.168.110.1/24
         subnet: 192.168.110.0/24
         guest: no
+
+    VPN_SERVER:
+      OpenVPN:
+        subnet: 192.168.112.0/24
+      L2TP:
+        subnet: 192.168.113.0/24
+
     VPN_S2S:
       code: 30
 
